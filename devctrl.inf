@@ -1,0 +1,152 @@
+;;;
+;;; 
+;;;
+;;;
+;;; 
+;;;
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = "ActivityMonitor"                         ;This is determined by the work this filter driver does
+ClassGuid   = {b86dff51-a31e-4bac-b3cf-e8cfe75c9fc2}
+Provider    = %Sobko%
+DriverVer   = 01/01/2004,1.0.0.1
+CatalogFile = devctrl.cat
+DriverPackageType=PnpDeviceFilter
+
+[Manufacturer]
+%Sobko%=DEVCTRLModelSection,ntamd64
+
+[DEVCTRLModelSection]
+%DEVCTRLName%=DefaultInstall,DEVCTRL
+
+[DEVCTRLModelSection.ntamd64]
+%DEVCTRLName%=DefaultInstall,DEVCTRL
+
+[DestinationDirs]
+DefaultDestDir = 12
+devctrl.DriverFiles = 12                        ;%windir%\system32\drivers
+
+[SourceDisksNames]
+1 = %Disk1%
+
+[SourceDisksFiles]
+devctrl.sys = 1
+
+;;
+;; Default install sections
+;;
+
+[DefaultInstall]
+OptionDesc          = %devctrlServiceDesc%
+CopyFiles           = devctrl.DriverFiles
+
+[DefaultInstall.ntamd64]
+OptionDesc          = %devctrlServiceDesc%
+CopyFiles           = devctrl.DriverFiles
+
+[DefaultInstall.Services]
+AddService          = %devctrlServiceName%,,devctrl.Service
+
+[DefaultInstall.ntamd64.Services]
+AddService          = %devctrlServiceName%,,devctrl.Service
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles   = devctrl.DriverFiles
+DelReg     = devctrl.DelRegistry
+
+[DefaultUninstall.ntamd64]
+DelFiles   = devctrl.DriverFiles
+DelReg     = devctrl.DelRegistry
+
+[DefaultUninstall.Services]
+DelService = devctrl
+
+[DefaultUninstall.ntamd64.Services]
+DelService = devctrl
+
+;
+; Services Section
+;
+
+[devctrl.Service]
+DisplayName      = %devctrlDisplayName%
+Description      = %devctrlServiceDesc%
+ServiceBinary    = %12%\devctrl.sys                 ;%windir%\system32\drivers\devctrl.sys
+ServiceType      = 1                            ;SERVICE_KERNEL_DRIVER
+StartType        = 3                            ;SERVICE_DEMAND_START
+ErrorControl     = 1                            ;SERVICE_ERROR_NORMAL
+LoadOrderGroup   = "Pnp Device Filter"
+AddReg           = devctrl.AddRegistry
+
+;
+; Registry Modifications
+;
+
+[devctrl.AddRegistry]
+; Standart USB
+HKLM,System\CurrentControlSet\Control\Class\{36fc9e60-c465-11cf-8056-444553540000},UpperFilters,0x00010008,%devctrlServiceName%
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},OtherTypes,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_00,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_01,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_02,0x00010001,0
+;HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_03,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_04,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_05,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_06,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_07,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_08,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_09,0x00010001,0
+HKR,Rules"\"{36fc9e60-c465-11cf-8056-444553540000},USB\CLASS_FF,0x00010001,0
+
+
+
+[devctrl.DelRegistry]
+HKLM,System\CurrentControlSet\Services\%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{36fc9e60-c465-11cf-8056-444553540000},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{e0cbf06c-cd8b-4647-bb8a-263b43f0f974},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{95C7A0A0-3094-11D7-A202-00508B9D7D5A},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{F12D3CF8-B11D-457E-8641-BE2AF2D6D204},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{745a17a0-74d3-11d0-b6fe-00a0c90f57da},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{49ce6ac8-6f86-11d2-b1e5-0080c72e74a2},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{25dbce51-6c8f-4a72-8a6d-b54c2b4fc835},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e965-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{4d36e980-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{6bdd1fc1-810f-11d0-bec7-08002be2092f},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e96d-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e977-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e978-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{6d807884-7d21-11cf-801c-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+
+HKLM,System\CurrentControlSet\Control\Class\{48721b56-6795-11d2-b1a8-0080c72e74a2},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{6bdd1fc6-810f-11d0-bec7-08002be2092f},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{6bdd1fc5-810f-11d0-bec7-08002be2092f},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e970-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{4d36e971-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName% 
+HKLM,System\CurrentControlSet\Control\Class\{50dd5230-ba8a-11d1-bf5d-0000f805f530},UpperFilters,0x00018002,%devctrlServiceName%
+HKLM,System\CurrentControlSet\Control\Class\{4d36e979-e325-11ce-bfc1-08002be10318},UpperFilters,0x00018002,%devctrlServiceName%  
+
+;
+; Copy Files
+;
+
+[devctrl.DriverFiles]
+devctrl.sys,,,2
+
+;;
+;; String Section
+;;
+
+[Strings]
+devctrlDisplayName    = "Sobko Device control driver"
+Sobko                 = "Sobko"
+devctrlServiceDesc    = "Sobko Pnp Device Filter"
+devctrlServiceName    = "DEVCTRL"
+devctrlDebugLevel     = "DebugLevel"
+Disk1                 = "devctrl Source"
+DEVCTRLName           = "DEVCTRL"
+

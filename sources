@@ -1,0 +1,24 @@
+TARGETNAME=devctrl
+TARGETTYPE = DRIVER
+
+LINKER_FLAGS=/NOLOGO
+PDBPATH=$(TARGETPATH)
+TARGETLIBS =  $(DDK_LIB_PATH)\wdmsec.lib
+RCOPTIONS=/v /dRC_BUILD_OPT="$(BUILD_ALT_DIR)"
+
+C_DEFINES= $(C_DEFINES)  -DCLASS_UPPER=1 -DIOCTL_INTERFACE=1
+
+SOURCES= devctrl.cpp \
+         devlist.cpp \
+	 devctrl.rc	 
+
+!IF "$(W2K)" == "_w2k"
+RUN_WPP=$(SOURCES) -km -gen:{km-w2k.tpl}*.tmh -func:DoTraceEx(LEVEL,FLAGS,MSG,...)
+!ELSE
+RUN_WPP= $(SOURCES) -km -func:DoTraceEx(LEVEL,FLAGS,MSG,...)
+!ENDIF
+
+
+
+
+
