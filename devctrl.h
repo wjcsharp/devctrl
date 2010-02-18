@@ -1,11 +1,10 @@
 #ifndef __devctrl_h
 #define __devctrl_h
 
-#include <ntddk.h>
-
-//#include <wdmsec.h> // for IoCreateDeviceSecure
+#include <fltkernel.h>
 #include <initguid.h>
-//#include <dontuse.h>
+#include <dontuse.h>
+
 #include "debug.h"
 
 
