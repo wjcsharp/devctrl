@@ -44,7 +44,6 @@ extern PULONG InitSafeBootMode;
     }
 #endif // CHECK_RETURN
 
-
 #define DEV_TYPE_OTHER							L"OtherTypes"
 #define DEV_TYPE_USB_CLASS_RESERVED				L"USB\\CLASS_00"
 #define DEV_TYPE_USB_CLASS_AUDIO				L"USB\\CLASS_01"
