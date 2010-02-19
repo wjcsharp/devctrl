@@ -47,21 +47,21 @@ DriverEntry (
     ExInitializeResourceLite( &Globals.m_DeviceListLock );
     InitializeListHead( &Globals.m_DeviceList );
 
-    for ( ULONG ulIndex = 0; ulIndex <= IRP_MJ_MAXIMUM_FUNCTION; ulIndex++)
+    for ( ULONG ulIndex = 0; ulIndex <= IRP_MJ_MAXIMUM_FUNCTION; ulIndex++ )
     {
         DriverObject->MajorFunction[ulIndex] = FilterPass;
     }
 
-    DriverObject->MajorFunction[IRP_MJ_PNP]            = FilterDispatchPnp;
-    DriverObject->MajorFunction[IRP_MJ_POWER]          = FilterDispatchPower;
-    DriverObject->DriverExtension->AddDevice           = FilterAddDevice;
-    DriverObject->DriverUnload                         = FilterUnload;
+    DriverObject->MajorFunction[IRP_MJ_PNP]     = FilterDispatchPnp;
+    DriverObject->MajorFunction[IRP_MJ_POWER]   = FilterDispatchPower;
+    DriverObject->DriverExtension->AddDevice    = FilterAddDevice;
+    DriverObject->DriverUnload                  = FilterUnload;
 
     // filtering points
     
-    DriverObject->MajorFunction[IRP_MJ_CREATE]     =
-    DriverObject->MajorFunction[IRP_MJ_CLOSE]      =
-    DriverObject->MajorFunction[IRP_MJ_CLEANUP]    =
+    DriverObject->MajorFunction[IRP_MJ_CREATE]  =
+    DriverObject->MajorFunction[IRP_MJ_CLOSE]   =
+    DriverObject->MajorFunction[IRP_MJ_CLEANUP] =
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
     DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =
                                                         FilterDispatchIo;
@@ -149,6 +149,20 @@ TypeCompare (
     return _wcsnicmp( wcGuidType, wcDevType, wcDevTypeLen );
 }
 
+PWCHAR DevStrings[] = {
+    DEV_TYPE_USB_CLASS_RESERVED,
+    DEV_TYPE_USB_CLASS_AUDIO,
+    DEV_TYPE_USB_CLASS_COMMUNICATIONS,
+    DEV_TYPE_USB_CLASS_HUMAN_INTERFACE,
+    DEV_TYPE_USB_CLASS_MONITOR,
+    DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE,
+    DEV_TYPE_USB_CLASS_POWER,
+    DEV_TYPE_USB_CLASS_PRINTER,
+    DEV_TYPE_USB_CLASS_STORAGE,
+    DEV_TYPE_USB_CLASS_HUB,
+    DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC,
+};
+
 PWCHAR
 GetDevType (
     __in PWCHAR wcGuidType
@@ -156,41 +170,13 @@ GetDevType (
 {
     ASSERT( ARGUMENT_PRESENT( wcGuidType ) );
 
-    if ( !TypeCompare( wcGuidType, DEV_TYPE_USB_CLASS_RESERVED ) )
+    for ( int cou = 0; cou <= RTL_NUMBER_OF( DevStrings ); cou++ )
     {
-        return DEV_TYPE_USB_CLASS_RESERVED;
+        if ( !TypeCompare( wcGuidType, DevStrings[cou] ) )
+        {
+            return DevStrings[ cou ];
+        }
     }
-
-    //! \todo refactor
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_AUDIO) == 0 )
-        return DEV_TYPE_USB_CLASS_AUDIO;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_COMMUNICATIONS) == 0 )
-        return DEV_TYPE_USB_CLASS_COMMUNICATIONS;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_HUMAN_INTERFACE) == 0 )
-        return DEV_TYPE_USB_CLASS_HUMAN_INTERFACE;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_MONITOR) == 0 )
-        return DEV_TYPE_USB_CLASS_MONITOR;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE) == 0 )
-        return DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_POWER) == 0 )
-        return DEV_TYPE_USB_CLASS_POWER;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_PRINTER) == 0 )
-        return DEV_TYPE_USB_CLASS_PRINTER;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_STORAGE) == 0 )
-        return DEV_TYPE_USB_CLASS_STORAGE;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_HUB) == 0 )
-        return DEV_TYPE_USB_CLASS_HUB;
-
-    if ( TypeCompare(wcGuidType, DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC) == 0 )
-        return DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC;
 
     return DEV_TYPE_OTHER;
 }
@@ -962,16 +948,13 @@ FilterUnload(
     FilterDeleteControlObject();
 
     ExDeleteResourceLite( &Globals.m_DeviceListLock );
-    
+
     return;
 }
 
-
-//! \todo refactor next
 __checkReturn
 NTSTATUS
-FilterCreateControlObject(
-    //__in PDEVICE_OBJECT    DeviceObject
+FilterCreateControlObject (
     __in PUNICODE_STRING RegistryPath,
     __in PDRIVER_OBJECT  DriverObject
 )
@@ -987,24 +970,25 @@ FilterCreateControlObject(
     // IoCreateDeviceSecure & IoCreateSymbolicLink must be called at
     // PASSIVE_LEVEL.
     //
-    ExAcquireFastMutexUnsafe( &Globals.m_ControlMutex);
 
-    //
-    // If this is a first instance of the device, then create a controlobject
-    // and register dispatch points to handle ioctls.
-    //
-    if (1 == ++Globals.m_InstanceCount)
+    ExAcquireFastMutexUnsafe( &Globals.m_ControlMutex );
+
+    __try
     {
-
         //
-        // Initialize the unicode strings
+        // If this is a first instance of the device, then create a controlobject
+        // and register dispatch points to handle ioctls.
         //
-        RtlInitUnicodeString( &ntDeviceName, NTDEVICE_NAME_STRING);
-        RtlInitUnicodeString( &symbolicLinkName, SYMBOLIC_NAME_STRING);
+        if ( 1 != ++Globals.m_InstanceCount )
+        {
+            __leave;
+        }
+        RtlInitUnicodeString( &ntDeviceName, NTDEVICE_NAME_STRING );
+        RtlInitUnicodeString( &symbolicLinkName, SYMBOLIC_NAME_STRING );
 
-        status = IoCreateDevice(
+        status = IoCreateDevice (
             DriverObject,
-            sizeof(CONTROL_DEVICE_EXTENSION),
+            sizeof( CONTROL_DEVICE_EXTENSION ),
             &ntDeviceName,
             FILE_DEVICE_UNKNOWN,
             0,
@@ -1012,218 +996,94 @@ FilterCreateControlObject(
             &Globals.m_CDO
             );
 
-
-        if ( NT_SUCCESS( status ) ) {
-
-            Globals.m_CDO->Flags |= DO_BUFFERED_IO;
+        if ( NT_SUCCESS( status ) )
+        {
+            SetFlag( Globals.m_CDO->Flags, DO_BUFFERED_IO );
 
             status = IoCreateSymbolicLink( &symbolicLinkName, &ntDeviceName );
 
-            if ( !NT_SUCCESS( status )) {
-                IoDeleteDevice(Globals.m_CDO);
-                goto End;
+            if ( !NT_SUCCESS( status ) )
+            {
+                IoDeleteDevice( Globals.m_CDO );
+                
+                __leave;
             }
 
-            deviceExtension = (PCONTROL_DEVICE_EXTENSION) Globals.m_CDO->DeviceExtension;
+            deviceExtension = (PCONTROL_DEVICE_EXTENSION) 
+                Globals.m_CDO->DeviceExtension;
             deviceExtension->m_CommonData.Type = DEVICE_TYPE_CDO;
             deviceExtension->ControlData = NULL;
             deviceExtension->Deleted = FALSE;
             
-            memset( &deviceExtension->usRegistryPath, 0, sizeof(UNICODE_STRING) );
-            deviceExtension->usRegistryPath.Buffer = (PWCH) ExAllocatePoolWithTag( PagedPool, RegistryPath->Length, _ALLOC_TAG );
+            RtlZeroMemory (
+                &deviceExtension->usRegistryPath,
+                sizeof(UNICODE_STRING)
+                );
+
+            deviceExtension->usRegistryPath.Buffer = (PWCH) ExAllocatePoolWithTag (
+                PagedPool,
+                RegistryPath->Length,
+                _ALLOC_TAG
+                );
+
             if ( deviceExtension->usRegistryPath.Buffer )
             {
                 deviceExtension->usRegistryPath.Length = 0;
-                deviceExtension->usRegistryPath.MaximumLength = RegistryPath->MaximumLength;
-                RtlCopyUnicodeString( &deviceExtension->usRegistryPath,  RegistryPath );
-            }
+                deviceExtension->usRegistryPath.MaximumLength =
+                    RegistryPath->MaximumLength;
 
-            Globals.m_CDO->Flags &= ~DO_DEVICE_INITIALIZING;
-            
+                RtlCopyUnicodeString (
+                    &deviceExtension->usRegistryPath,
+                    RegistryPath
+                    );
+            }
+            ClearFlag( Globals.m_CDO->Flags, DO_DEVICE_INITIALIZING );
         }
     }
+    __finally
+    {
+        ExReleaseFastMutexUnsafe( &Globals.m_ControlMutex );
+    }
 
-End:
-    
-    ExReleaseFastMutexUnsafe( &Globals.m_ControlMutex);
     return status;
-    
 }
 
 VOID
-FilterDeleteControlObject(
+FilterDeleteControlObject (
 )
 {
     UNICODE_STRING      symbolicLinkName;
     PCONTROL_DEVICE_EXTENSION   deviceExtension;
 
-    ExAcquireFastMutexUnsafe( &Globals.m_ControlMutex);
+    ExAcquireFastMutexUnsafe( &Globals.m_ControlMutex );
 
     //
     // If this is the last instance of the device then delete the controlobject
     // and symbolic link to enable the pnp manager to unload the driver.
     //
-    
-    if (!(--Globals.m_InstanceCount) && Globals.m_CDO)
+
+    if ( !(--Globals.m_InstanceCount) && Globals.m_CDO )
     {
         RtlInitUnicodeString( &symbolicLinkName, SYMBOLIC_NAME_STRING);
         deviceExtension = (PCONTROL_DEVICE_EXTENSION) Globals.m_CDO->DeviceExtension;
         deviceExtension->Deleted = TRUE;
 
         FREE_POOL( deviceExtension->usRegistryPath.Buffer );
-        
-        IoDeleteSymbolicLink( &symbolicLinkName);
-        IoDeleteDevice(Globals.m_CDO);
+
+        IoDeleteSymbolicLink( &symbolicLinkName );
+        IoDeleteDevice( Globals.m_CDO );
         Globals.m_CDO = NULL;
     }
 
-    ExReleaseFastMutexUnsafe( &Globals.m_ControlMutex);
-
+    ExReleaseFastMutexUnsafe( &Globals.m_ControlMutex );
 }
 
-
-#define IS_ALIGNED(_pointer, _alignment)                        \
-    ((((ULONG_PTR) (_pointer)) & ((_alignment) - 1)) == 0)
-
+__checkReturn
 NTSTATUS
-Comm_CheckOutputBuffer (
-                        __in PVOID OutputBuffer,
-                        __in ULONG OutputBufferSize,
-                        __in ULONG MinSize
-                        )
-{
-    if (!OutputBuffer)
-        return STATUS_INVALID_PARAMETER;
-
-#if defined(_WIN64)
-    if (IoIs32bitProcess( NULL ))
-    {
-        if (!IS_ALIGNED(OutputBuffer, sizeof(ULONG)))
-        {
-            //__debugbreak();
-            //return STATUS_DATATYPE_MISALIGNMENT;
-            //DoTraceEx( TRACE_LEVEL_ERROR, DC_COMM, "OutputBuffer not aligned %p",  OutputBuffer );
-        }
-    }
-    else
-    {
-#endif
-        if (!IS_ALIGNED(OutputBuffer, sizeof(PVOID)))
-        {
-            //__debugbreak();
-            //return STATUS_DATATYPE_MISALIGNMENT;
-            //DoTraceEx( TRACE_LEVEL_ERROR, DC_COMM, "OutputBuffer not aligned %p",  OutputBuffer );
-        }
-#if defined(_WIN64)
-    }
-#endif
-
-    if (OutputBufferSize < MinSize)
-        return STATUS_BUFFER_TOO_SMALL;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-Comm_CopyDataToUserBuffer (
-                           __in PVOID OutputBuffer,
-                           __in ULONG OutputBufferSize,
-                           __in PVOID pSource,
-                           __in ULONG SourceLen,
-                           __inout PULONG ReturnOutputBufferLength
-                           )
-{
-    NTSTATUS status = STATUS_BUFFER_TOO_SMALL;
-
-    *ReturnOutputBufferLength = 0;
-    if (!OutputBuffer)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if (OutputBufferSize < SourceLen)
-        return STATUS_BUFFER_TOO_SMALL;
-
-    __try {
-        memcpy( OutputBuffer, pSource, SourceLen );
-        *ReturnOutputBufferLength = SourceLen;
-        status = STATUS_SUCCESS;
-    } 
-    __except( EXCEPTION_EXECUTE_HANDLER ) {
-        status = GetExceptionCode();
-    }
-
-    return status;
-}
-
-NTSTATUS
-Comm_CopyUserBufferToInternal (
-                               __in PVOID pInternalPtr,
-                               __in PVOID pUserBuffer,
-                               __in ULONG Size
-                               )
-{
-    NTSTATUS status = STATUS_SUCCESS;
-
-    __try {
-        memcpy( pInternalPtr, pUserBuffer, Size );
-    } 
-    __except( EXCEPTION_EXECUTE_HANDLER ) {
-        status = GetExceptionCode();
-        __debugbreak();
-    }
-    return status;
-}
-
-NTSTATUS
-Comm_GetIncomeString (
-    __in PVOID pStartPtr,
-    __in USHORT StrLen,
-    __out PWCHAR* ppwchStr
-    )
-{
-    NTSTATUS status = STATUS_NO_MEMORY;
-    *ppwchStr = NULL;
-
-    *ppwchStr = (PWCHAR) ExAllocatePoolWithTag( PagedPool, StrLen, _ALLOC_TAG );
-    if (*ppwchStr)
-    {
-        status = Comm_CopyUserBufferToInternal( *ppwchStr, pStartPtr, StrLen );
-        if (!NT_SUCCESS( status ))
-        {
-            FREE_POOL( *ppwchStr );
-        }
-    }
-
-    return status;
-}
-
-
-NTSTATUS
-FilterDispatchIo(
+FilterDispatchIo (
     __in PDEVICE_OBJECT    DeviceObject,
     __in PIRP              Irp
     )
-/*++
-
-Routine Description:
-
-    This routine is the dispatch routine for non passthru irps.
-    We will check the input device object to see if the request
-    is meant for the control device object. If it is, we will
-    handle and complete the IRP, if not, we will pass it down to 
-    the lower driver.
-    
-Arguments:
-
-    DeviceObject - Pointer to the device object.
-
-    Irp - Pointer to the request packet.
-
-Return Value:
-
-    NT Status code
---*/
 {
     PIO_STACK_LOCATION  irpStack;
     NTSTATUS            status;
@@ -1236,12 +1096,10 @@ Return Value:
     ULONG               OutputBufferSize;
     PIO_STATUS_BLOCK    IoStatus;
 
-   commonData = (PCOMMON_DEVICE_DATA)DeviceObject->DeviceExtension;
-   
+   commonData = (PCOMMON_DEVICE_DATA) DeviceObject->DeviceExtension;
 
-   IoStatus=&Irp->IoStatus;
+   IoStatus = &Irp->IoStatus;
 
-   
    irpStack = IoGetCurrentIrpStackLocation( Irp );
 
    InputBuffer      = Irp->AssociatedIrp.SystemBuffer;
@@ -1253,44 +1111,35 @@ Return Value:
     // Please note that this is a common dispatch point for controlobject and
     // filter deviceobject attached to the pnp stack. 
     //
-    if ( commonData->Type == DEVICE_TYPE_FIDO ) {
+    if ( commonData->Type == DEVICE_TYPE_FIDO )
+    {
         //
         // We will just  the request down as we are not interested in handling
         // requests that come on the PnP stack.
         //
-        return FilterPass(DeviceObject, Irp);
+        return FilterPass( DeviceObject, Irp );
     }
  
-    ASSERT(commonData->Type == DEVICE_TYPE_CDO);
+    ASSERT( commonData->Type == DEVICE_TYPE_CDO );
 
     deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-    
-    //
-    // Else this is targeted at our control deviceobject so let's handle it.
-    // Here we will handle the IOCTl requests that come from the app.
-    // We don't have to worry about acquiring remlocks for I/Os that come 
-    // on our control object because the I/O manager takes reference on our 
-    // deviceobject when it initiates a request to our device and that keeps
-    // our driver from unloading when we have pending I/Os. But we still
-    // have to watch out for a scenario where another driver can send 
-    // requests to our deviceobject directly without opening an handle.
-    //
-    if (!deviceExtension->Deleted) 
-    { //if not deleted
+
+    if ( !deviceExtension->Deleted )
+    {
         status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
-        irpStack = IoGetCurrentIrpStackLocation ( Irp );
+        irpStack = IoGetCurrentIrpStackLocation( Irp );
 
-        switch (irpStack->MajorFunction) {
+        switch (irpStack->MajorFunction)
+        {
             case IRP_MJ_CREATE:
                 break;
-                
+
             case IRP_MJ_CLOSE:
                 break;
-                
+
             case IRP_MJ_CLEANUP:
                 break;
-                
 #if DBG
              case  IRP_MJ_DEVICE_CONTROL:
 #endif
@@ -1301,77 +1150,15 @@ Return Value:
             default:
                 break;
         }
-    } else {
-        ASSERTMSG(FALSE, "Requests being sent to a dead device\n");
+    }
+    else
+    {
+        ASSERTMSG( FALSE, "Requests being sent to a dead device\n" );
         status = STATUS_DEVICE_REMOVED;
     }
+
     Irp->IoStatus.Status = status;
-    IoCompleteRequest (Irp, IO_NO_INCREMENT );
-    
+    IoCompleteRequest( Irp, IO_NO_INCREMENT );
+
     return status;
 }
-
-#if DBG
-
-PCHAR
-PnPMinorFunctionString (
-    UCHAR MinorFunction
-)
-{
-    switch (MinorFunction)
-    {
-        case IRP_MN_START_DEVICE:
-            return "IRP_MN_START_DEVICE";
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-            return "IRP_MN_QUERY_REMOVE_DEVICE";
-        case IRP_MN_REMOVE_DEVICE:
-            return "IRP_MN_REMOVE_DEVICE";
-        case IRP_MN_CANCEL_REMOVE_DEVICE:
-            return "IRP_MN_CANCEL_REMOVE_DEVICE";
-        case IRP_MN_STOP_DEVICE:
-            return "IRP_MN_STOP_DEVICE";
-        case IRP_MN_QUERY_STOP_DEVICE:
-            return "IRP_MN_QUERY_STOP_DEVICE";
-        case IRP_MN_CANCEL_STOP_DEVICE:
-            return "IRP_MN_CANCEL_STOP_DEVICE";
-        case IRP_MN_QUERY_DEVICE_RELATIONS:
-            return "IRP_MN_QUERY_DEVICE_RELATIONS";
-        case IRP_MN_QUERY_INTERFACE:
-            return "IRP_MN_QUERY_INTERFACE";
-        case IRP_MN_QUERY_CAPABILITIES:
-            return "IRP_MN_QUERY_CAPABILITIES";
-        case IRP_MN_QUERY_RESOURCES:
-            return "IRP_MN_QUERY_RESOURCES";
-        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
-            return "IRP_MN_QUERY_RESOURCE_REQUIREMENTS";
-        case IRP_MN_QUERY_DEVICE_TEXT:
-            return "IRP_MN_QUERY_DEVICE_TEXT";
-        case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-            return "IRP_MN_FILTER_RESOURCE_REQUIREMENTS";
-        case IRP_MN_READ_CONFIG:
-            return "IRP_MN_READ_CONFIG";
-        case IRP_MN_WRITE_CONFIG:
-            return "IRP_MN_WRITE_CONFIG";
-        case IRP_MN_EJECT:
-            return "IRP_MN_EJECT";
-        case IRP_MN_SET_LOCK:
-            return "IRP_MN_SET_LOCK";
-        case IRP_MN_QUERY_ID:
-            return "IRP_MN_QUERY_ID";
-        case IRP_MN_QUERY_PNP_DEVICE_STATE:
-            return "IRP_MN_QUERY_PNP_DEVICE_STATE";
-        case IRP_MN_QUERY_BUS_INFORMATION:
-            return "IRP_MN_QUERY_BUS_INFORMATION";
-        case IRP_MN_DEVICE_USAGE_NOTIFICATION:
-            return "IRP_MN_DEVICE_USAGE_NOTIFICATION";
-        case IRP_MN_SURPRISE_REMOVAL:
-            return "IRP_MN_SURPRISE_REMOVAL";
-
-        default:
-            return "unknown_pnp_irp";
-    }
-}
-
-#endif
-
-
