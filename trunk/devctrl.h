@@ -4,18 +4,14 @@
 #include <fltkernel.h>
 #include <initguid.h>
 #include <dontuse.h>
+#define NTSTRSAFE_LIB
+#include <ntstrsafe.h>
 
 #include "debug.h"
-
 
 // {05D4176B-81D5-4672-A543-D5539D29622B}  - generated using guidgen.exe
 DEFINE_GUID (GUID_DEVCTRL_CONTROL_OBJECT,
         0x05D4176B, 0x81d5, 0x4672, 0xa5, 0x43, 0xd5, 0x53, 0x9d, 0x29, 0x62, 0x2b);
-
-//
-// GUID definition are required to be outside of header inclusion pragma to avoid
-// error during precompiled headers.
-//
 
 #define DRIVERNAME "devctrl.sys upper: "
 #define _ALLOC_TAG 'abos'
@@ -155,33 +151,25 @@ typedef struct _CONTROL_DEVICE_EXTENSION {
     ULONG               m_Deleted; // False if the deviceobject is valid, TRUE if it's deleted
     UNICODE_STRING      m_usRegistryPath;
     PVOID               m_ControlData; // Store your control data here
-
 } CONTROL_DEVICE_EXTENSION, *PCONTROL_DEVICE_EXTENSION;
 
 NTSTATUS
-FilterCreateControlObject(
-    //__in PDEVICE_OBJECT    DeviceObject
+FilterCreateControlObject (
     __in PUNICODE_STRING RegistryPath,
     __in PDRIVER_OBJECT  DriverObject
 );
 
 VOID
-FilterDeleteControlObject(
+FilterDeleteControlObject (
     );
 
 DRIVER_DISPATCH FilterDispatchIo;
 
 typedef struct _GLOBAL_DATA {
-
-    //  Control Device Object for this filter
     PDEVICE_OBJECT        m_CDO;
-
     FAST_MUTEX          m_ControlMutex;
     ULONG               m_InstanceCount;
-
-    DECLSPEC_ALIGN( MEMORY_ALLOCATION_ALIGNMENT )
-    ERESOURCE           m_DeviceListLock;
-
+    DECLSPEC_ALIGN( MEMORY_ALLOCATION_ALIGNMENT ) ERESOURCE m_DeviceListLock;
     LIST_ENTRY          m_DeviceList;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
