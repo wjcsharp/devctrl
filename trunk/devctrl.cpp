@@ -5,6 +5,20 @@
 
 GLOBAL_DATA Globals;
 
+PWCHAR DevStrings[] = {
+    DEV_TYPE_USB_CLASS_RESERVED,
+    DEV_TYPE_USB_CLASS_AUDIO,
+    DEV_TYPE_USB_CLASS_COMMUNICATIONS,
+    DEV_TYPE_USB_CLASS_HUMAN_INTERFACE,
+    DEV_TYPE_USB_CLASS_MONITOR,
+    DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE,
+    DEV_TYPE_USB_CLASS_POWER,
+    DEV_TYPE_USB_CLASS_PRINTER,
+    DEV_TYPE_USB_CLASS_STORAGE,
+    DEV_TYPE_USB_CLASS_HUB,
+    DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC,
+};
+
 BOOLEAN 
 AcquireResourceExclusive (
     __in PERESOURCE pResource
@@ -148,20 +162,6 @@ TypeCompare (
 
     return _wcsnicmp( wcGuidType, wcDevType, wcDevTypeLen );
 }
-
-PWCHAR DevStrings[] = {
-    DEV_TYPE_USB_CLASS_RESERVED,
-    DEV_TYPE_USB_CLASS_AUDIO,
-    DEV_TYPE_USB_CLASS_COMMUNICATIONS,
-    DEV_TYPE_USB_CLASS_HUMAN_INTERFACE,
-    DEV_TYPE_USB_CLASS_MONITOR,
-    DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE,
-    DEV_TYPE_USB_CLASS_POWER,
-    DEV_TYPE_USB_CLASS_PRINTER,
-    DEV_TYPE_USB_CLASS_STORAGE,
-    DEV_TYPE_USB_CLASS_HUB,
-    DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC,
-};
 
 PWCHAR
 GetDevType (
@@ -1012,28 +1012,28 @@ FilterCreateControlObject (
             deviceExtension = (PCONTROL_DEVICE_EXTENSION) 
                 Globals.m_CDO->DeviceExtension;
             deviceExtension->m_CommonData.Type = DEVICE_TYPE_CDO;
-            deviceExtension->ControlData = NULL;
-            deviceExtension->Deleted = FALSE;
+            deviceExtension->m_ControlData = NULL;
+            deviceExtension->m_Deleted = FALSE;
             
             RtlZeroMemory (
-                &deviceExtension->usRegistryPath,
-                sizeof(UNICODE_STRING)
+                &deviceExtension->m_usRegistryPath,
+                sizeof( UNICODE_STRING )
                 );
 
-            deviceExtension->usRegistryPath.Buffer = (PWCH) ExAllocatePoolWithTag (
+            deviceExtension->m_usRegistryPath.Buffer = (PWCH) ExAllocatePoolWithTag (
                 PagedPool,
                 RegistryPath->Length,
                 _ALLOC_TAG
                 );
 
-            if ( deviceExtension->usRegistryPath.Buffer )
+            if ( deviceExtension->m_usRegistryPath.Buffer )
             {
-                deviceExtension->usRegistryPath.Length = 0;
-                deviceExtension->usRegistryPath.MaximumLength =
+                deviceExtension->m_usRegistryPath.Length = 0;
+                deviceExtension->m_usRegistryPath.MaximumLength =
                     RegistryPath->MaximumLength;
 
                 RtlCopyUnicodeString (
-                    &deviceExtension->usRegistryPath,
+                    &deviceExtension->m_usRegistryPath,
                     RegistryPath
                     );
             }
@@ -1066,9 +1066,9 @@ FilterDeleteControlObject (
     {
         RtlInitUnicodeString( &symbolicLinkName, SYMBOLIC_NAME_STRING);
         deviceExtension = (PCONTROL_DEVICE_EXTENSION) Globals.m_CDO->DeviceExtension;
-        deviceExtension->Deleted = TRUE;
+        deviceExtension->m_Deleted = TRUE;
 
-        FREE_POOL( deviceExtension->usRegistryPath.Buffer );
+        FREE_POOL( deviceExtension->m_usRegistryPath.Buffer );
 
         IoDeleteSymbolicLink( &symbolicLinkName );
         IoDeleteDevice( Globals.m_CDO );
@@ -1124,7 +1124,7 @@ FilterDispatchIo (
 
     deviceExtension = (PCONTROL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if ( !deviceExtension->Deleted )
+    if ( !deviceExtension->m_Deleted )
     {
         status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
