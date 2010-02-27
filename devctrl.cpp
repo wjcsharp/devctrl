@@ -307,7 +307,7 @@ GetClassGuidType (
     ULONG retSize = 0;
     PWCHAR buf = NULL;
         
-    PWCHAR wcdevType;
+    PWCHAR wcdevType = NULL;
     PWCHAR id = NULL;
 
     PWCHAR InstanceID = NULL,
@@ -427,6 +427,83 @@ GetClassGuidType (
     return STATUS_SUCCESS;
 }
 
+__checkReturn
+NTSTATUS
+QueryCapabilities (
+    __in PDEVICE_OBJECT pDevice
+    )
+{
+    PIRP Irp;
+    PIO_STACK_LOCATION irpSp;
+    IO_STATUS_BLOCK statusBlock;
+    KEVENT event;
+    NTSTATUS status;
+
+    DEVICE_CAPABILITIES capabilities;
+    RtlZeroMemory( &capabilities, sizeof( capabilities ) );
+
+    __try
+    {
+        Irp = IoBuildSynchronousFsdRequest(
+            IRP_MJ_PNP,
+            pDevice,
+            NULL,
+            0,
+            NULL,
+            &event,
+            &statusBlock
+            );
+
+        if ( !Irp )
+        {
+            status = STATUS_INSUFFICIENT_RESOURCES;
+            __leave;
+        }
+
+        KeInitializeEvent (
+            &event,
+            SynchronizationEvent,
+            FALSE
+            );
+
+        irpSp = IoGetNextIrpStackLocation( Irp );
+
+        irpSp->MinorFunction = IRP_MN_QUERY_CAPABILITIES;
+        irpSp->Parameters.DeviceCapabilities.Capabilities = &capabilities;
+
+        status = IoCallDriver( pDevice, Irp );
+
+        if ( STATUS_PENDING == status)
+        {
+            KeWaitForSingleObject (
+                &event,
+                Executive,
+                KernelMode,
+                FALSE,
+                (PLARGE_INTEGER) NULL
+                );
+
+            status = statusBlock.Status;
+        }
+
+        if ( NT_SUCCESS( status ) )
+        {
+            if ( statusBlock.Information )
+            {
+                //! \todo save UiniqueID
+            }
+            else
+            {
+                status = STATUS_UNSUCCESSFUL;
+            }
+        }
+    }
+    __finally
+    {
+    }
+
+    return status;
+}
 
 NTSTATUS
 FilterAddDevice (
@@ -541,7 +618,7 @@ Return Value:
 
     RtlInitUnicodeString( &deviceExtension->DevName.usDeviceType, wcStr );
 
-    //! \todo IRP_MN_QUERY_CAPABILITIES - check UniqueID and othe fields
+    status = QueryCapabilities( PhysicalDeviceObject );
 
     //если доступ к устройству разрешен и логировать не нужно то вообще не цепляемся к устройству  
     /*if ( IsAllowAccess( deviceExtension->DevName.usGuid, deviceExtension->DevName.usDeviceType, &needLog ) )
