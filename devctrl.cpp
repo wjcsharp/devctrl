@@ -429,7 +429,7 @@ GetClassGuidType (
 
 
 NTSTATUS
-FilterAddDevice(
+FilterAddDevice (
     __in PDRIVER_OBJECT DriverObject,
     __in PDEVICE_OBJECT PhysicalDeviceObject
     )
@@ -540,6 +540,8 @@ Return Value:
     }
 
     RtlInitUnicodeString( &deviceExtension->DevName.usDeviceType, wcStr );
+
+    //! \todo IRP_MN_QUERY_CAPABILITIES - check UniqueID and othe fields
 
     //если доступ к устройству разрешен и логировать не нужно то вообще не цепляемся к устройству  
     /*if ( IsAllowAccess( deviceExtension->DevName.usGuid, deviceExtension->DevName.usDeviceType, &needLog ) )
