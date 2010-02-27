@@ -5,7 +5,7 @@
 #include <initguid.h>
 #include <dontuse.h>
 #define NTSTRSAFE_LIB
-#include <ntstrsafe.h>
+//! \todo #include <ntstrsafe.h>
 
 #include "debug.h"
 
