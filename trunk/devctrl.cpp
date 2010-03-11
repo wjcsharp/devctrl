@@ -1193,6 +1193,31 @@ FilterDeleteControlObject (
 }
 
 __checkReturn
+BOOLEAN
+IsGetMediaSerialNmberRequest (
+    PIO_STACK_LOCATION IrpStack
+    )
+{
+    if (IRP_MJ_DEVICE_CONTROL != IrpStack->MajorFunction )
+    {
+        return FALSE;
+    }
+
+    if ( IRP_MJ_INTERNAL_DEVICE_CONTROL != IrpStack->MajorFunction )
+    {
+        return FALSE;
+    }
+
+    if (IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER != 
+            IrpStack->Parameters.DeviceIoControl.IoControlCode )
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+__checkReturn
 NTSTATUS
 FilterDispatchIo (
     __in PDEVICE_OBJECT    DeviceObject,
@@ -1227,6 +1252,15 @@ FilterDispatchIo (
     //
     if ( commonData->Type == DEVICE_TYPE_FIDO )
     {
+        if ( IsGetMediaSerialNmberRequest( irpStack ) )
+        {
+            //! \todo
+            /*InputBufferSize >= sizeof(KLFLTDEV_GET_SERIAL_ID))
+            Irp->IoStatus.Status = status;
+            IoCompleteRequest (Irp, IO_NO_INCREMENT);
+            return status;*/
+        }
+
         //
         // We will just  the request down as we are not interested in handling
         // requests that come on the PnP stack.

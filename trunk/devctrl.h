@@ -9,6 +9,7 @@
 
 #include <fltkernel.h>
 #include <initguid.h>
+#include <ntddstor.h>
 #include <dontuse.h>
 #define NTSTRSAFE_LIB
 //! \todo #include <ntstrsafe.h>
