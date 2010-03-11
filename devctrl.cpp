@@ -1,5 +1,10 @@
 #include "devctrl.h"
+
+#pragma prefast(push)
+#pragma prefast(disable: 6011)
+#pragma prefast(disable: 6387)
 #include "devctrl.tmh"
+#pragma prefast(pop)
 
 #include "devlist.h"
 
@@ -12,16 +17,17 @@ PWCHAR DevStrings[] = {
     DEV_TYPE_USB_CLASS_HUMAN_INTERFACE,
     DEV_TYPE_USB_CLASS_MONITOR,
     DEV_TYPE_USB_CLASS_PHYSICAL_INTERFACE,
-    DEV_TYPE_USB_CLASS_POWER,
+    DEV_TYPE_USB_CLASS_POWER,   
     DEV_TYPE_USB_CLASS_PRINTER,
     DEV_TYPE_USB_CLASS_STORAGE,
     DEV_TYPE_USB_CLASS_HUB,
     DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC,
 };
 
-BOOLEAN 
+BOOLEAN
+__drv_acquiresCriticalRegion
 AcquireResourceExclusive (
-    __in PERESOURCE pResource
+    __inout __drv_acquiresResource( ExResourceType ) PERESOURCE pResource
     )
 {
     BOOLEAN ret;
@@ -33,9 +39,11 @@ AcquireResourceExclusive (
     return ret;
 }
 
-void
+VOID
+__drv_releasesCriticalRegion
+__drv_mustHoldCriticalRegion
 ReleaseResource (
-    __in PERESOURCE pResource
+    __inout __drv_releasesResource( ExResourceType) PERESOURCE pResource
     )
 {
     ASSERT( ARGUMENT_PRESENT( pResource ) );
@@ -63,6 +71,7 @@ DriverEntry (
 
     for ( ULONG ulIndex = 0; ulIndex <= IRP_MJ_MAXIMUM_FUNCTION; ulIndex++ )
     {
+#pragma prefast(suppress: 28169, "__drv_dispatchType ignored") 
         DriverObject->MajorFunction[ulIndex] = FilterPass;
     }
 
@@ -170,7 +179,7 @@ GetDevType (
 {
     ASSERT( ARGUMENT_PRESENT( wcGuidType ) );
 
-    for ( int cou = 0; cou <= RTL_NUMBER_OF( DevStrings ); cou++ )
+    for ( int cou = 0; cou < RTL_NUMBER_OF( DevStrings ); cou++ )
     {
         if ( !TypeCompare( wcGuidType, DevStrings[cou] ) )
         {
@@ -254,7 +263,7 @@ NTSTATUS
 IopQueryBus (
     __in PDEVICE_OBJECT DeviceObject,
     __in BUS_QUERY_ID_TYPE IdType,
-    __deref_out_opt PWCHAR *UniqueId
+    __deref_out_opt PVOID *UniqueId
     )
 {
     IO_STACK_LOCATION irpSp;
@@ -269,7 +278,7 @@ IopQueryBus (
 
     irpSp.Parameters.QueryId.IdType = IdType;
 
-    status = IopSynchronousCall( DeviceObject, &irpSp, (PVOID*) UniqueId );
+    status = IopSynchronousCall( DeviceObject, &irpSp, UniqueId );
 
     return status;
 }
@@ -278,7 +287,7 @@ __checkReturn
 NTSTATUS
 IopQueryDeviceText (
     __in PDEVICE_OBJECT DeviceObject,
-    __deref_out_opt PWCHAR *Description
+    __deref_out_opt PVOID *Description
     )
 {
     LCID PsDefaultSystemLocaleId = 0x00000409;
@@ -291,7 +300,7 @@ IopQueryDeviceText (
     irpSp.MinorFunction = IRP_MN_QUERY_DEVICE_TEXT;
     irpSp.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
     irpSp.Parameters.QueryDeviceText.LocaleId = PsDefaultSystemLocaleId;
-    status = IopSynchronousCall( DeviceObject, &irpSp, (PVOID*) Description );
+    status = IopSynchronousCall( DeviceObject, &irpSp, Description );
 
     return status;
 }
@@ -320,7 +329,7 @@ GetClassGuidType (
     status = IopQueryBus(
         PhysicalDeviceObject,
         BusQueryInstanceID,
-        &InstanceID
+        (PVOID*) &InstanceID
         );
     
     CHECK_RETURN( status, InstanceID );
@@ -328,7 +337,7 @@ GetClassGuidType (
     status = IopQueryBus(
         PhysicalDeviceObject,
         BusQueryDeviceID,
-        &DeviceID
+        (PVOID*) &DeviceID
         );
    
     CHECK_RETURN( status, DeviceID );
@@ -336,7 +345,7 @@ GetClassGuidType (
     status = IopQueryBus(
         PhysicalDeviceObject,
         BusQueryDeviceSerialNumber,
-        &SerialNumber
+        (PVOID*) &SerialNumber
         );
 
     CHECK_RETURN( status, SerialNumber );
@@ -344,7 +353,7 @@ GetClassGuidType (
     status = IopQueryBus(
         PhysicalDeviceObject,
         BusQueryHardwareIDs,
-        &HardwareIDs
+        (PVOID*) &HardwareIDs
         );
     
     CHECK_RETURN( status, HardwareIDs );
@@ -352,14 +361,14 @@ GetClassGuidType (
     status = IopQueryBus(
         PhysicalDeviceObject,
         BusQueryCompatibleIDs,
-        &CompatibleIDs
+        (PVOID*) &CompatibleIDs
         );
 
     CHECK_RETURN( status, CompatibleIDs );
 
     status = IopQueryDeviceText (
         PhysicalDeviceObject,
-        &Description
+        (PVOID*) &Description
         );
 
     CHECK_RETURN( status, Description );
@@ -441,6 +450,12 @@ QueryCapabilities (
 
     DEVICE_CAPABILITIES capabilities;
     RtlZeroMemory( &capabilities, sizeof( capabilities ) );
+
+    KeInitializeEvent (
+        &event,
+        SynchronizationEvent,
+        FALSE
+        );
 
     __try
     {
@@ -619,6 +634,10 @@ Return Value:
     RtlInitUnicodeString( &deviceExtension->DevName.usDeviceType, wcStr );
 
     status = QueryCapabilities( PhysicalDeviceObject );
+    if ( !NT_SUCCESS ( status ) )
+    {
+        ASSERT( !NT_SUCCESS( status ) );
+    }
 
     //если доступ к устройству разрешен и логировать не нужно то вообще не цепляемся к устройству  
     /*if ( IsAllowAccess( deviceExtension->DevName.usGuid, deviceExtension->DevName.usDeviceType, &needLog ) )
@@ -770,7 +789,7 @@ FilterDispatchPnp (
         KeInitializeEvent( &event, NotificationEvent, FALSE);
         IoCopyCurrentIrpStackLocationToNext( Irp );
         IoSetCompletionRoutine(Irp,
-            (PIO_COMPLETION_ROUTINE) FilterStartCompletionRoutine,
+            FilterStartCompletionRoutine,
             &event,
             TRUE,
             TRUE,
@@ -948,7 +967,12 @@ FilterStartCompletionRoutine (
     // This optimization avoids grabbing the dispatcher lock, and improves perf.
     if ( Irp->PendingReturned )
     {
-        KeSetEvent( event, IO_NO_INCREMENT, FALSE );
+        ASSERT( event );
+
+        if ( event )
+        {
+            KeSetEvent( event, IO_NO_INCREMENT, FALSE );
+        }
     }
 
     // The dispatch routine will have to call IoCompleteRequest

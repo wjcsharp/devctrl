@@ -1,6 +1,12 @@
 #ifndef __devctrl_h
 #define __devctrl_h
 
+#pragma warning(disable:28252) // sal annotation compare h -> cpp
+#pragma warning(disable:28253) // sal annotation compare h -> cpp
+#pragma warning(disable:28107) // critical region checks
+#pragma warning(disable:28103) // critical region leaks
+#pragma warning(disable:28175) // access to DEVICE_OBJECT members
+
 #include <fltkernel.h>
 #include <initguid.h>
 #include <dontuse.h>
@@ -129,9 +135,14 @@ DRIVER_INITIALIZE DriverEntry;
 
 DRIVER_ADD_DEVICE FilterAddDevice;
 
+__drv_dispatchType(IRP_MJ_PNP)
 DRIVER_DISPATCH FilterDispatchPnp;
 
+__drv_dispatchType(IRP_MJ_POWER)
 DRIVER_DISPATCH FilterDispatchPower;
+
+__drv_dispatchType(IRP_MJ_INTERNAL_DEVICE_CONTROL)
+DRIVER_DISPATCH FilterDispatchIo;
 
 DRIVER_DISPATCH FilterPass;
 
@@ -139,12 +150,7 @@ DRIVER_UNLOAD FilterUnload;
 
 IO_COMPLETION_ROUTINE FilterDeviceUsageNotificationCompletionRoutine;
 
-NTSTATUS
-FilterStartCompletionRoutine (
-    __in PDEVICE_OBJECT   DeviceObject,
-    __in PIRP             Irp,
-    __in PVOID            Context
-    );
+IO_COMPLETION_ROUTINE FilterStartCompletionRoutine;
 
 typedef struct _CONTROL_DEVICE_EXTENSION {
     COMMON_DEVICE_DATA  m_CommonData;
@@ -162,8 +168,6 @@ FilterCreateControlObject (
 VOID
 FilterDeleteControlObject (
     );
-
-DRIVER_DISPATCH FilterDispatchIo;
 
 typedef struct _GLOBAL_DATA {
     PDEVICE_OBJECT        m_CDO;
