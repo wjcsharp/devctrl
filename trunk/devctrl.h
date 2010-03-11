@@ -15,6 +15,8 @@
 
 #include "debug.h"
 
+extern "C" PULONG InitSafeBootMode;
+
 // {05D4176B-81D5-4672-A543-D5539D29622B}  - generated using guidgen.exe
 DEFINE_GUID (GUID_DEVCTRL_CONTROL_OBJECT,
         0x05D4176B, 0x81d5, 0x4672, 0xa5, 0x43, 0xd5, 0x53, 0x9d, 0x29, 0x62, 0x2b);
