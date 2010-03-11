@@ -312,6 +312,7 @@ GetClassGuidType (
     __deref_out_opt PWCHAR *pwcGuidType
     )
 {
+    //! query device info function
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     ULONG retSize = 0;
     PWCHAR buf = NULL;
@@ -325,6 +326,8 @@ GetClassGuidType (
         HardwareIDs = NULL,
         CompatibleIDs = NULL,
         Description = NULL;
+
+    __debugbreak();
 
     status = IopQueryBus(
         PhysicalDeviceObject,
@@ -429,7 +432,7 @@ GetClassGuidType (
         return STATUS_NO_MEMORY;
     }
 
-    //! \todo ermove zeromemory
+    //! \todo remove zeromemory
     RtlZeroMemory( *pwcGuidType, retSize );
     RtlCopyMemory( *pwcGuidType, wcdevType, retSize );
 
