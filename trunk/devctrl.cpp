@@ -32,7 +32,7 @@ AcquireResourceExclusive (
 {
     BOOLEAN ret;
     ASSERT( ARGUMENT_PRESENT( pResource ) );
-    
+#pragma prefast(suppress: 28103)
     KeEnterCriticalRegion();
     ret = ExAcquireResourceExclusiveLite( pResource, TRUE );
 

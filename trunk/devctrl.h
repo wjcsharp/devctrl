@@ -1,11 +1,11 @@
 #ifndef __devctrl_h
 #define __devctrl_h
 
-#pragma warning(disable:28252) // sal annotation compare h -> cpp
-#pragma warning(disable:28253) // sal annotation compare h -> cpp
-#pragma warning(disable:28107) // critical region checks
-#pragma warning(disable:28103) // critical region leaks
-#pragma warning(disable:28175) // access to DEVICE_OBJECT members
+#pragma prefast(disable:28252) // sal annotation compare h -> cpp
+#pragma prefast(disable:28253) // sal annotation compare h -> cpp
+#pragma prefast(disable: 28107) // critical region checks
+
+#pragma prefast(disable:28175) // access to DEVICE_OBJECT members
 
 #include <fltkernel.h>
 #include <initguid.h>
