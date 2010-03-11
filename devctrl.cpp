@@ -520,11 +520,14 @@ QueryCapabilities (
     return status;
 }
 
+#pragma prefast(push)
+#pragma prefast(disable: 28152, "DO_DEVICE_INITIALIZING flag")
 NTSTATUS
 FilterAddDevice (
     __in PDRIVER_OBJECT DriverObject,
     __in PDEVICE_OBJECT PhysicalDeviceObject
     )
+#pragma prefast(pop)
 /*++
 
 Routine Description:
@@ -561,6 +564,11 @@ Return Value:
     //
     // Create a filter device object.
     //
+
+    if ( *InitSafeBootMode > 0 )
+    {
+        return STATUS_SUCCESS;
+    }
 
     status = IoCreateDevice (
         DriverObject,
