@@ -1208,7 +1208,7 @@ IsGetMediaSerialNmberRequest (
         return FALSE;
     }
 
-    if (IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER != 
+    if ( IOCTL_STORAGE_GET_MEDIA_SERIAL_NUMBER != 
             IrpStack->Parameters.DeviceIoControl.IoControlCode )
     {
         return FALSE;
