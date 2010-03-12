@@ -10,6 +10,11 @@
 
 GLOBAL_DATA Globals;
 
+// {E636CD65-4021-4d20-97EC-5AE23189566B}
+DEFINE_GUID( GET_MEDIA_SERIAL_NUMBER_GUID, 
+            0xe636cd65,
+            0x4021, 0x4d20, 0x97, 0xec, 0x5a, 0xe2, 0x31, 0x89, 0x56, 0x6b );
+
 PWCHAR DevStrings[] = {
     DEV_TYPE_USB_CLASS_RESERVED,
     DEV_TYPE_USB_CLASS_AUDIO,
@@ -1197,7 +1202,7 @@ IsGetMediaSerialNmberRequest (
     )
 {
     if ( IRP_MJ_DEVICE_CONTROL != IrpStack->MajorFunction 
-        ||
+        &&
         IRP_MJ_INTERNAL_DEVICE_CONTROL != IrpStack->MajorFunction
         )
     {
@@ -1248,13 +1253,24 @@ FilterDispatchIo (
     //
     if ( commonData->Type == DEVICE_TYPE_FIDO )
     {
-        if ( IsGetMediaSerialNmberRequest( irpStack ) )
+        if ( IsGetMediaSerialNmberRequest( irpStack )
+            &&
+            InputBuffer
+            &&
+            InputBufferSize >= sizeof( GET_MEDIA_SERIAL_NUMBER_GUID )
+            &&
+            IsEqualGUID ( *(PGUID) InputBuffer, GET_MEDIA_SERIAL_NUMBER_GUID )
+            )
         {
-            //! \todo
-            /*InputBufferSize >= sizeof(KLFLTDEV_GET_SERIAL_ID))
+            __debugbreak();
+
+            status = STATUS_SUCCESS;
+
+            Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = status;
-            IoCompleteRequest (Irp, IO_NO_INCREMENT);
-            return status;*/
+            IoCompleteRequest ( Irp, IO_NO_INCREMENT );
+
+            return status;
         }
 
         //
