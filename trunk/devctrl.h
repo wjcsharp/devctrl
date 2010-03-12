@@ -3,7 +3,7 @@
 
 #pragma prefast(disable:28252) // sal annotation compare h -> cpp
 #pragma prefast(disable:28253) // sal annotation compare h -> cpp
-#pragma prefast(disable: 28107) // critical region checks
+#pragma prefast(disable:28107) // critical region checks
 
 #pragma prefast(disable:28175) // access to DEVICE_OBJECT members
 
