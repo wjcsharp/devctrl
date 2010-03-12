@@ -1196,12 +1196,10 @@ IsGetMediaSerialNmberRequest (
     PIO_STACK_LOCATION IrpStack
     )
 {
-    if (IRP_MJ_DEVICE_CONTROL != IrpStack->MajorFunction )
-    {
-        return FALSE;
-    }
-
-    if ( IRP_MJ_INTERNAL_DEVICE_CONTROL != IrpStack->MajorFunction )
+    if ( IRP_MJ_DEVICE_CONTROL != IrpStack->MajorFunction 
+        ||
+        IRP_MJ_INTERNAL_DEVICE_CONTROL != IrpStack->MajorFunction
+        )
     {
         return FALSE;
     }
