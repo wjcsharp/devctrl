@@ -460,7 +460,7 @@ QueryCapabilities (
 
     __try
     {
-        Irp = IoBuildSynchronousFsdRequest(
+        Irp = IoBuildSynchronousFsdRequest (
             IRP_MJ_PNP,
             pDevice,
             NULL,
@@ -489,7 +489,7 @@ QueryCapabilities (
 
         status = IoCallDriver( pDevice, Irp );
 
-        if ( STATUS_PENDING == status)
+        if ( STATUS_PENDING == status )
         {
             KeWaitForSingleObject (
                 &event,
@@ -573,7 +573,7 @@ Return Value:
 
     status = IoCreateDevice (
         DriverObject,
-        sizeof ( DEVICE_EXTENSION ),
+        sizeof( DEVICE_EXTENSION ),
         NULL,  // No Name
         deviceType,
         FILE_DEVICE_SECURE_OPEN,
