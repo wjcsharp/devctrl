@@ -327,9 +327,7 @@ GetClassGuidType (
         CompatibleIDs = NULL,
         Description = NULL;
 
-    __debugbreak();
-
-    status = IopQueryBus(
+    status = IopQueryBus (
         PhysicalDeviceObject,
         BusQueryInstanceID,
         (PVOID*) &InstanceID
@@ -337,7 +335,7 @@ GetClassGuidType (
     
     CHECK_RETURN( status, InstanceID );
 
-    status = IopQueryBus(
+    status = IopQueryBus (
         PhysicalDeviceObject,
         BusQueryDeviceID,
         (PVOID*) &DeviceID
@@ -345,7 +343,7 @@ GetClassGuidType (
    
     CHECK_RETURN( status, DeviceID );
 
-    status = IopQueryBus(
+    status = IopQueryBus (
         PhysicalDeviceObject,
         BusQueryDeviceSerialNumber,
         (PVOID*) &SerialNumber
@@ -353,7 +351,7 @@ GetClassGuidType (
 
     CHECK_RETURN( status, SerialNumber );
 
-    status = IopQueryBus(
+    status = IopQueryBus (
         PhysicalDeviceObject,
         BusQueryHardwareIDs,
         (PVOID*) &HardwareIDs
@@ -361,7 +359,7 @@ GetClassGuidType (
     
     CHECK_RETURN( status, HardwareIDs );
 
-    status = IopQueryBus(
+    status = IopQueryBus (
         PhysicalDeviceObject,
         BusQueryCompatibleIDs,
         (PVOID*) &CompatibleIDs
@@ -397,7 +395,7 @@ GetClassGuidType (
     }
 
     buf = (PWCHAR) ExAllocatePoolWithTag( PagedPool, retSize, _ALLOC_TAG );
-    if (!buf)
+    if ( !buf )
     {
         return STATUS_NO_MEMORY;
     }
@@ -413,14 +411,14 @@ GetClassGuidType (
     if ( !NT_SUCCESS( status ) )
     {
         FREE_POOL( buf );
+
         return status;
     }
 
     wcdevType = GetDevType( buf );
     FREE_POOL( buf );
-    buf = NULL;
     
-    retSize = (ULONG)( (wcslen(wcdevType)+1)*sizeof(WCHAR) );
+    retSize = (ULONG)( ( wcslen( wcdevType ) + 1 ) * sizeof( WCHAR ) );
     *pwcGuidType = (PWCHAR) ExAllocatePoolWithTag (
         PagedPool,
         retSize,
