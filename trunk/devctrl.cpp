@@ -29,6 +29,103 @@ PWCHAR DevStrings[] = {
     DEV_TYPE_USB_CLASS_VENDOR_SPECIFIC,
 };
 
+typedef struct _DEVOBJ_EXTENSION_HEADER
+{
+    CSHORT			Type;			//: Int2B
+    USHORT			Size;			//: Uint2B
+    PDEVICE_OBJECT	DeviceObject;	//: Ptr32 _DEVICE_OBJECT
+    ULONG			PowerFlags;		//: Uint4B
+    PVOID			Dope;			//: Ptr32 _DEVICE_OBJECT_POWER_EXTENSION
+    ULONG			ExtensionFlags;	//: Uint4B
+    PVOID			DeviceNode;		//: Ptr32 Void
+    PDEVICE_OBJECT	AttachedTo;		//: Ptr32 _DEVICE_OBJECT
+
+}DEVOBJ_EXTENSION_HEADER, *PDEVOBJ_EXTENSION_HEADER;
+
+typedef struct _DEVICE_NODE_WXP_HEADER
+{
+    PVOID				Sibling;				//: Ptr32 _DEVICE_NODE
+    PVOID				Child;					//: Ptr32 _DEVICE_NODE
+    PVOID				Parent;					//: Ptr32 _DEVICE_NODE
+    PVOID				LastChild;				//: Ptr32 _DEVICE_NODE
+    ULONG				Level;					//: Uint4B
+    PVOID				Notify;					//: Ptr32 _PO_DEVICE_NOTIFY
+    ULONG				State;					//: _PNP_DEVNODE_STATE
+    ULONG				PreviousState;			//: _PNP_DEVNODE_STATE
+    ULONG				StateHistory[20];		//: [20] _PNP_DEVNODE_STATE
+    ULONG				StateHistoryEntry;		//: Uint4B
+    NTSTATUS			CompletionStatus;		//: Int4B
+    PIRP				PendingIrp;				//: Ptr32 _IRP
+    ULONG				Flags;					//: Uint4B
+    ULONG				UserFlags;				//: Uint4B
+    ULONG				Problem;				//: Uint4B
+    PDEVICE_OBJECT		PhysicalDeviceObject;	//: Ptr32 _DEVICE_OBJECT
+    PCM_RESOURCE_LIST	ResourceList;			//: Ptr32 _CM_RESOURCE_LIST
+    PCM_RESOURCE_LIST	ResourceListTranslated;	//: Ptr32 _CM_RESOURCE_LIST
+    UNICODE_STRING		InstancePath;			//: _UNICODE_STRING
+    UNICODE_STRING		ServiceName;			//: _UNICODE_STRING
+}DEVICE_NODE_WXP_HEADER,*PDEVICE_NODE_WXP_HEADER;
+
+typedef struct _PO_DEVICE_NOTIFY_VISTA
+{
+    LIST_ENTRY Link;					//: _LIST_ENTRY
+    PDEVICE_OBJECT TargetDevice;		//: Ptr32 _DEVICE_OBJECT
+    UCHAR OrderLevel;					//: UChar
+    PDEVICE_OBJECT DeviceObject;		//: Ptr32 _DEVICE_OBJECT
+    PWCHAR DeviceName;					//: Ptr32 Uint2B
+    PWCHAR DriverName;					//: Ptr32 Uint2B
+    ULONG ChildCount;					//: Uint4B
+    ULONG ActiveChild;					//: Uint4B
+}PO_DEVICE_NOTIFY_VISTA,*PPO_DEVICE_NOTIFY_VISTA;
+
+typedef struct _PO_IRP_QUEUE_VISTA
+{
+    PIRP CurrentIrp;		//: Ptr32 _IRP
+    PIRP PendingIrpList;	//: Ptr32 _IRP
+}PO_IRP_QUEUE_VISTA, *PPO_IRP_QUEUE_VISTA;
+
+typedef struct _PO_IRP_MANAGER_VISTA
+{
+    PO_IRP_QUEUE_VISTA DeviceIrpQueue;	//: _PO_IRP_QUEUE
+    PO_IRP_QUEUE_VISTA SystemIrpQueue;	//: _PO_IRP_QUEUE
+}PO_IRP_MANAGER_VISTA,*PPO_IRP_MANAGER_VISTA;
+
+typedef struct _DEVICE_NODE_VISTA_HEADER
+{
+    PVOID					Sibling;				//: Ptr32 _DEVICE_NODE
+    PVOID					Child;					//: Ptr32 _DEVICE_NODE
+    PVOID					Parent;					//: Ptr32 _DEVICE_NODE
+    PVOID					LastChild;				//: Ptr32 _DEVICE_NODE
+    ULONG					Level;					//: Uint4B
+    PO_DEVICE_NOTIFY_VISTA	Notify;					//: _PO_DEVICE_NOTIFY
+    PO_IRP_MANAGER_VISTA	PoIrpManager;			//: _PO_IRP_MANAGER
+    ULONG					State;					//: _PNP_DEVNODE_STATE
+    ULONG					PreviousState;			//: _PNP_DEVNODE_STATE
+    ULONG					StateHistory[20];		//: [20] _PNP_DEVNODE_STATE
+    ULONG					StateHistoryEntry;		//: Uint4B
+    NTSTATUS				CompletionStatus;		//: Int4B
+    PIRP					PendingIrp;				//: Ptr32 _IRP
+    ULONG					Flags;					//: Uint4B
+    ULONG					UserFlags;				//: Uint4B
+    ULONG					Problem;				//: Uint4B
+    PDEVICE_OBJECT			PhysicalDeviceObject;	//: Ptr32 _DEVICE_OBJECT
+    PCM_RESOURCE_LIST		ResourceList;			//: Ptr32 _CM_RESOURCE_LIST
+    PCM_RESOURCE_LIST		ResourceListTranslated;	//: Ptr32 _CM_RESOURCE_LIST
+    UNICODE_STRING			InstancePath;			//: _UNICODE_STRING
+    UNICODE_STRING			ServiceName;			//: _UNICODE_STRING
+}DEVICE_NODE_VISTA_HEADER,*PDEVICE_NODE_VISTA_HEADER;
+
+typedef struct _DEVICE_NODE_W7_HEADER
+{
+    PVOID			Sibling;				//: Ptr64 to struct _DEVICE_NODE, 54 elements, 0x268 bytes
+    PVOID			Child;					//: Ptr64 to struct _DEVICE_NODE, 54 elements, 0x268 bytes
+    PVOID			Parent;					//: Ptr64 to struct _DEVICE_NODE, 54 elements, 0x268 bytes
+    PVOID			LastChild;				//: Ptr64 to struct _DEVICE_NODE, 54 elements, 0x268 bytes
+    PDEVICE_OBJECT	PhysicalDeviceObject;	//: Ptr64 to struct _DEVICE_OBJECT, 25 elements, 0x150 bytes
+    UNICODE_STRING	InstancePath;			//: struct _UNICODE_STRING, 3 elements, 0x10 bytes
+    UNICODE_STRING	ServiceName;			//: struct _UNICODE_STRING, 3 elements, 0x10 bytes
+}DEVICE_NODE_W7_HEADER, *PDEVICE_NODE_W7_HEADER;
+
 BOOLEAN
 __drv_acquiresCriticalRegion
 AcquireResourceExclusive (
@@ -325,57 +422,57 @@ GetClassGuidType (
     PWCHAR wcdevType = NULL;
     PWCHAR id = NULL;
 
-    PWCHAR InstanceID = NULL,
-        DeviceID = NULL,
-        SerialNumber = NULL,
-        HardwareIDs = NULL,
-        CompatibleIDs = NULL,
-        Description = NULL;
+    /*PWCHAR InstanceID = NULL,
+    DeviceID = NULL,
+    SerialNumber = NULL,
+    HardwareIDs = NULL,
+    CompatibleIDs = NULL,
+    Description = NULL;
 
     status = IopQueryBus (
-        PhysicalDeviceObject,
-        BusQueryInstanceID,
-        (PVOID*) &InstanceID
-        );
-    
+    PhysicalDeviceObject,
+    BusQueryInstanceID,
+    (PVOID*) &InstanceID
+    );
+
     CHECK_RETURN( status, InstanceID );
 
     status = IopQueryBus (
-        PhysicalDeviceObject,
-        BusQueryDeviceID,
-        (PVOID*) &DeviceID
-        );
-   
+    PhysicalDeviceObject,
+    BusQueryDeviceID,
+    (PVOID*) &DeviceID
+    );
+
     CHECK_RETURN( status, DeviceID );
 
     status = IopQueryBus (
-        PhysicalDeviceObject,
-        BusQueryDeviceSerialNumber,
-        (PVOID*) &SerialNumber
-        );
+    PhysicalDeviceObject,
+    BusQueryDeviceSerialNumber,
+    (PVOID*) &SerialNumber
+    );
 
     CHECK_RETURN( status, SerialNumber );
 
     status = IopQueryBus (
-        PhysicalDeviceObject,
-        BusQueryHardwareIDs,
-        (PVOID*) &HardwareIDs
-        );
-    
+    PhysicalDeviceObject,
+    BusQueryHardwareIDs,
+    (PVOID*) &HardwareIDs
+    );
+
     CHECK_RETURN( status, HardwareIDs );
 
     status = IopQueryBus (
-        PhysicalDeviceObject,
-        BusQueryCompatibleIDs,
-        (PVOID*) &CompatibleIDs
-        );
+    PhysicalDeviceObject,
+    BusQueryCompatibleIDs,
+    (PVOID*) &CompatibleIDs
+    );
 
     CHECK_RETURN( status, CompatibleIDs );
 
     status = IopQueryDeviceText (
-        PhysicalDeviceObject,
-        (PVOID*) &Description
-        );
+    PhysicalDeviceObject,
+    (PVOID*) &Description
+    );
 
     CHECK_RETURN( status, Description );
 
@@ -384,7 +481,7 @@ GetClassGuidType (
     FREE_POOL( SerialNumber );
     FREE_POOL( HardwareIDs );
     FREE_POOL( CompatibleIDs );
-    FREE_POOL( Description );
+    FREE_POOL( Description );*/
 
     status = IoGetDeviceProperty (
         PhysicalDeviceObject, 
@@ -511,13 +608,130 @@ QueryCapabilities (
         {
             if ( statusBlock.Information )
             {
-                //! \todo save UiniqueID
+                // \todo save UiniqueID - настоящий или нет HardwareId
             }
             else
             {
                 status = STATUS_UNSUCCESSFUL;
             }
         }
+    }
+    __finally
+    {
+    }
+
+    return status;
+}
+
+NTSTATUS
+GetSerialId (
+    __in PDEVICE_OBJECT PhysicalDeviceObject,
+    __out PUNICODE_STRING SerialID
+    )
+{
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+    ULONG MjOsVersion = 0;
+    ULONG MiOsVersion = 0;
+    ULONG BuildNumber = 0;
+    PUNICODE_STRING InstancePath = NULL;
+    
+    ASSERT( PhysicalDeviceObject );
+    ASSERT( SerialID );
+
+    __try
+    {
+        PsGetVersion ( &MjOsVersion, &MiOsVersion, &BuildNumber, NULL );
+
+        switch( MjOsVersion )
+        {
+        case 5:
+            switch ( MiOsVersion )
+            {
+            case 0:
+                 __debugbreak();
+                break;
+
+            case 1:
+            case 2:
+                {
+                    PDEVOBJ_EXTENSION_HEADER pDevExt = (PDEVOBJ_EXTENSION_HEADER)PhysicalDeviceObject->DeviceObjectExtension;
+                    PDEVICE_NODE_WXP_HEADER pDevNode = (PDEVICE_NODE_WXP_HEADER)pDevExt->DeviceNode;
+
+                    InstancePath = &pDevNode->InstancePath;
+                }
+                break;
+
+            default:
+                __debugbreak();
+                break;
+            }
+            break;
+
+        case 6:
+            switch ( MiOsVersion )
+            {
+            case 0:
+                {
+                    PDEVOBJ_EXTENSION_HEADER pDevExt = (PDEVOBJ_EXTENSION_HEADER)PhysicalDeviceObject->DeviceObjectExtension;
+                    PDEVICE_NODE_VISTA_HEADER pDevNode = (PDEVICE_NODE_VISTA_HEADER)pDevExt->DeviceNode;
+
+                    InstancePath = &pDevNode->InstancePath;
+                }
+                break;
+
+            case 1:
+                {
+                    PDEVOBJ_EXTENSION_HEADER pDevExt = (PDEVOBJ_EXTENSION_HEADER)PhysicalDeviceObject->DeviceObjectExtension;
+                    PDEVICE_NODE_W7_HEADER pDevNode = (PDEVICE_NODE_W7_HEADER)pDevExt->DeviceNode;
+
+                    InstancePath = &pDevNode->InstancePath;
+                }
+                break;
+
+            default:
+                __debugbreak();
+                break;
+            }
+            break;
+
+        default:
+            __debugbreak();
+            break;
+        }
+
+        if ( !InstancePath )
+        {
+            __leave;
+        }
+
+        if ( InstancePath->Length > 0x300 )
+        {
+            __debugbreak();
+            __leave;
+        }
+
+        SerialID->Buffer = (PWCH) ExAllocatePoolWithTag (
+            PagedPool,
+            InstancePath->Length,
+            _ALLOC_TAG
+            );
+
+        if ( !SerialID->Buffer )
+        {
+            status = STATUS_NO_MEMORY;
+            __leave;
+        }
+
+        RtlZeroMemory( SerialID->Buffer, InstancePath->Length );
+        SerialID->Length =  InstancePath->Length;
+        SerialID->MaximumLength = InstancePath->Length;
+        RtlCopyMemory (
+            SerialID->Buffer,
+            InstancePath->Buffer,
+            InstancePath->Length
+            );
+
+        status = STATUS_SUCCESS;
     }
     __finally
     {
@@ -600,6 +814,11 @@ Return Value:
     deviceExtension = (PDEVICE_EXTENSION) deviceObject->DeviceExtension;
 
     deviceExtension->m_CommonData.Type = DEVICE_TYPE_FIDO;
+    RtlInitEmptyUnicodeString (
+        &deviceExtension->DeviceId,
+        NULL,
+        0
+        );
 
     PWCHAR wcStr = NULL;
     BOOLEAN needLog = FALSE;
@@ -618,74 +837,42 @@ Return Value:
     status = GetClassGuidType( PhysicalDeviceObject, &wcStr );
     if ( !NT_SUCCESS( status ) )
     {
-
-        ULONG wcStrSize = (ULONG)( wcslen( DEV_TYPE_OTHER ) *
-            sizeof( WCHAR ) + sizeof( WCHAR ) );
-
-        wcStr = (PWCHAR) ExAllocatePoolWithTag (
-            PagedPool,
-            wcStrSize,
-            _ALLOC_TAG
-            );
-
-        if ( !wcStr )
+        if ( deviceExtension->DevName.usGuid.Buffer )
         {
-            if ( deviceExtension->DevName.usGuid.Buffer )
-            {
-                FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
-            }
-
-            IoDeleteDevice( deviceObject );
-
-            return STATUS_SUCCESS;
+            FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
         }
 
-        //! \todo - remove zeromemory
-        RtlZeroMemory( wcStr, wcStrSize );
-        RtlCopyMemory( wcStr, DEV_TYPE_OTHER, wcStrSize );
+        IoDeleteDevice( deviceObject );
+
+        return STATUS_SUCCESS;
     }
 
     RtlInitUnicodeString( &deviceExtension->DevName.usDeviceType, wcStr );
+    status = GetSerialId (
+        PhysicalDeviceObject,
+        &deviceExtension->DeviceId
+        );
+   if ( !NT_SUCCESS ( status ) )
+   {
+       RtlInitEmptyUnicodeString (
+           &deviceExtension->DeviceId,
+           NULL,
+           0
+           );
+   }
 
     status = QueryCapabilities( PhysicalDeviceObject );
     if ( !NT_SUCCESS ( status ) )
     {
         ASSERT( !NT_SUCCESS( status ) );
     }
-
-    //если доступ к устройству разрешен и логировать не нужно то вообще не цепляемся к устройству  
-    /*if ( IsAllowAccess( deviceExtension->DevName.usGuid, deviceExtension->DevName.usDeviceType, &needLog ) )
-    {
-        if( !needLog )
-        {
-            if ( deviceExtension->DevName.usGuid.Buffer )
-                {
-                FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
-                }
-
-            if ( deviceExtension->DevName.usGuid.Buffer )
-                {
-                FREE_POOL( deviceExtension->DevName.usDeviceType.Buffer );
-                }
-
-            IoDeleteDevice(deviceObject);
-
-            return STATUS_SUCCESS;
-        }
-    }*/
-
+    
     status = InsertDeviceList( &deviceExtension->DevName );
     if ( !NT_SUCCESS( status ) )
     {
-        if ( deviceExtension->DevName.usGuid.Buffer )
-        {
-            FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
-        }
-
-        if ( deviceExtension->DevName.usGuid.Buffer )
-        {
-            FREE_POOL( deviceExtension->DevName.usDeviceType.Buffer );
-        }
+        FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
+        FREE_POOL( deviceExtension->DevName.usDeviceType.Buffer );
+        FREE_POOL( deviceExtension->DeviceId.Buffer );
 
         IoDeleteDevice(deviceObject);
 
@@ -862,6 +1049,7 @@ FilterDispatchPnp (
         RemItemFromDeviceList( &deviceExtension->DevName );
         FREE_POOL( deviceExtension->DevName.usDeviceType.Buffer );
         FREE_POOL( deviceExtension->DevName.usGuid.Buffer );
+        FREE_POOL( deviceExtension->DeviceId.Buffer );
 
         IoDetachDevice( deviceExtension->NextLowerDriver );
         IoDeleteDevice( DeviceObject );
@@ -1262,11 +1450,33 @@ FilterDispatchIo (
             IsEqualGUID ( *(PGUID) InputBuffer, GET_MEDIA_SERIAL_NUMBER_GUID )
             )
         {
-            __debugbreak();
+            PDEVICE_EXTENSION pFiDoDevExt = (PDEVICE_EXTENSION)
+                DeviceObject->DeviceExtension;
+                
+            PSTORAGE_MEDIA_SERIAL_NUMBER_DATA pMedia = 
+                ( PSTORAGE_MEDIA_SERIAL_NUMBER_DATA ) OutputBuffer;
+            
+            ULONG mediaIdLength = sizeof(STORAGE_MEDIA_SERIAL_NUMBER_DATA)
+                + pFiDoDevExt->DeviceId.Length;
 
-            status = STATUS_SUCCESS;
+            if ( pMedia && OutputBufferSize >= mediaIdLength )
+            {
+                status = STATUS_SUCCESS;
+                Irp->IoStatus.Information = mediaIdLength;
 
-            Irp->IoStatus.Information = 0;
+                RtlCopyMemory (
+                    pMedia->SerialNumber,
+                    pFiDoDevExt->DeviceId.Buffer,
+                    pFiDoDevExt->DeviceId.Length
+                    );
+                pMedia->SerialNumberLength = pFiDoDevExt->DeviceId.Length;
+            }
+            else
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                Irp->IoStatus.Information = 0;
+            }
+
             Irp->IoStatus.Status = status;
             IoCompleteRequest ( Irp, IO_NO_INCREMENT );
 

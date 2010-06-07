@@ -106,7 +106,7 @@ typedef struct _DEVICE_NAME
 
 typedef struct _COMMON_DEVICE_DATA
 {
-    DEVICE_TYPE_SUBST Type;
+    DEVICE_TYPE_SUBST   Type;
 } COMMON_DEVICE_DATA, *PCOMMON_DEVICE_DATA;
 
 typedef struct _DEVICE_EXTENSION
@@ -130,6 +130,7 @@ typedef struct _DEVICE_EXTENSION
     IO_REMOVE_LOCK RemoveLock;
 
     DEVICE_NAME DevName;
+    UNICODE_STRING DeviceId;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
