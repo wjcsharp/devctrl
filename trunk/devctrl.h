@@ -114,23 +114,24 @@ typedef struct _DEVICE_EXTENSION
     COMMON_DEVICE_DATA m_CommonData;
 
     // A back pointer to the device object.
-    PDEVICE_OBJECT  Self;
+    PDEVICE_OBJECT      Self;
 
     // The top of the stack before this filter was added.
-    PDEVICE_OBJECT  NextLowerDriver;
+    PDEVICE_OBJECT      NextLowerDriver;
 
     // current PnP state of the device
-    DEVICE_PNP_STATE  DevicePnPState;
+    DEVICE_PNP_STATE    DevicePnPState;
 
     // Remembers the previous pnp state
     DEVICE_PNP_STATE    PreviousPnPState;
 
     // Removelock to track IRPs so that device can be removed and
     // the driver can be unloaded safely.
-    IO_REMOVE_LOCK RemoveLock;
+    IO_REMOVE_LOCK      RemoveLock;
 
-    DEVICE_NAME DevName;
-    UNICODE_STRING DeviceId;
+    DEVICE_NAME         DevName;
+    UNICODE_STRING      DeviceId;
+    ULONG               IsUnique;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 
