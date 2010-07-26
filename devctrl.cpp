@@ -7,13 +7,10 @@
 #pragma prefast(pop)
 
 #include "devlist.h"
+#include "inc/devctrlex.h"
 
 GLOBAL_DATA Globals;
 
-// {E636CD65-4021-4d20-97EC-5AE23189566B}
-DEFINE_GUID( GET_MEDIA_SERIAL_NUMBER_GUID, 
-            0xe636cd65,
-            0x4021, 0x4d20, 0x97, 0xec, 0x5a, 0xe2, 0x31, 0x89, 0x56, 0x6b );
 
 PWCHAR DevStrings[] = {
     DEV_TYPE_USB_CLASS_RESERVED,
@@ -542,7 +539,8 @@ GetClassGuidType (
 __checkReturn
 NTSTATUS
 QueryCapabilities (
-    __in PDEVICE_OBJECT pDevice
+    __in PDEVICE_OBJECT pDevice,
+    __out PULONG IsEnuque
     )
 {
     PIRP Irp;
@@ -606,14 +604,7 @@ QueryCapabilities (
 
         if ( NT_SUCCESS( status ) )
         {
-            if ( statusBlock.Information )
-            {
-                // \todo save UiniqueID - настоящий или нет HardwareId
-            }
-            else
-            {
-                status = STATUS_UNSUCCESSFUL;
-            }
+            *IsEnuque = capabilities.UniqueID;
         }
     }
     __finally
@@ -861,11 +852,15 @@ Return Value:
            );
    }
 
-    status = QueryCapabilities( PhysicalDeviceObject );
+   ULONG isenuque;
+    status = QueryCapabilities( PhysicalDeviceObject, &isenuque );
     if ( !NT_SUCCESS ( status ) )
     {
         ASSERT( !NT_SUCCESS( status ) );
+        isenuque = 0;
     }
+
+    deviceExtension->IsUnique = isenuque;
     
     status = InsertDeviceList( &deviceExtension->DevName );
     if ( !NT_SUCCESS( status ) )
