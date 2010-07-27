@@ -1448,23 +1448,41 @@ FilterDispatchIo (
             PDEVICE_EXTENSION pFiDoDevExt = (PDEVICE_EXTENSION)
                 DeviceObject->DeviceExtension;
                 
-            PSTORAGE_MEDIA_SERIAL_NUMBER_DATA pMedia = 
-                ( PSTORAGE_MEDIA_SERIAL_NUMBER_DATA ) OutputBuffer;
-            
-            ULONG mediaIdLength = sizeof(STORAGE_MEDIA_SERIAL_NUMBER_DATA)
-                + pFiDoDevExt->DeviceId.Length;
+            PDEVCTRL_DEVICEINFO pMedia = (PDEVCTRL_DEVICEINFO) OutputBuffer;
 
-            if ( pMedia && OutputBufferSize >= mediaIdLength )
+            PUNICODE_STRING pusDeviceType = &pFiDoDevExt->DevName.usDeviceType;
+            ULONG retlength = sizeof( DEVCTRL_DEVICEINFO )
+                + pFiDoDevExt->DeviceId.Length +
+                pusDeviceType->Length;
+
+            if ( pMedia && OutputBufferSize >= retlength )
             {
                 status = STATUS_SUCCESS;
-                Irp->IoStatus.Information = mediaIdLength;
+                Irp->IoStatus.Information = retlength;
+
+                RtlZeroMemory( pMedia, retlength );
 
                 RtlCopyMemory (
-                    pMedia->SerialNumber,
+                    pMedia->Data,
                     pFiDoDevExt->DeviceId.Buffer,
                     pFiDoDevExt->DeviceId.Length
                     );
-                pMedia->SerialNumberLength = pFiDoDevExt->DeviceId.Length;
+                pMedia->IdOffset = FIELD_OFFSET( DEVCTRL_DEVICEINFO, Data ) ;
+                pMedia->IdLenght = pFiDoDevExt->DeviceId.Length;
+
+                pMedia->IsIdUnique = pFiDoDevExt->IsUnique;
+
+                if ( pusDeviceType->Length )
+                {
+                    pMedia->ClassIdLength = pusDeviceType->Length;
+                    pMedia->ClassIdOffset = pMedia->IdOffset + pMedia->IdLenght;
+                    RtlCopyMemory (
+                        Add2Ptr( pMedia, pMedia->ClassIdOffset ),
+                        pusDeviceType->Buffer,
+                        pusDeviceType->Length
+                        );
+                }
+
             }
             else
             {
